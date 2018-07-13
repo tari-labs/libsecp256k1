@@ -2,17 +2,16 @@
 //! signatures. The secp256k1 curve is used excusively in Bitcoin and
 //! Ethereum alike cryptocurrencies.
 
-#![deny(unused_import_braces, unused_imports,
-        unused_comparisons, unused_must_use,
-        unused_variables, non_shorthand_field_patterns,
-        unreachable_code, unused_parens)]
-
+#![deny(
+    unused_import_braces, unused_imports, unused_comparisons, unused_must_use, unused_variables,
+    non_shorthand_field_patterns, unreachable_code, unused_parens
+)]
 #![no_std]
-extern crate hmac_drbg;
-extern crate typenum;
 extern crate digest;
-extern crate sha2;
+extern crate hmac_drbg;
 extern crate rand;
+extern crate sha2;
+extern crate typenum;
 #[macro_use]
 extern crate arrayref;
 
@@ -20,11 +19,11 @@ extern crate arrayref;
 mod field;
 #[macro_use]
 mod group;
-mod scalar;
-mod ecmult;
-mod ecdsa;
 mod ecdh;
+mod ecdsa;
+mod ecmult;
 mod error;
+mod scalar;
 
 use hmac_drbg::HmacDRBG;
 use sha2::Sha256;
@@ -38,16 +37,18 @@ use ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
 
 use rand::Rng;
 
+use core::ops::Add;
+use core::ops::Mul;
+use core::ops::Neg;
 pub use error::Error;
 
 /// Curve related structs.
 pub mod curve {
     pub use field::Field;
-    pub use group::{Affine, Jacobian, AffineStorage, AFFINE_G, CURVE_B};
+    pub use group::{Affine, AffineStorage, Jacobian, AFFINE_G, CURVE_B};
     pub use scalar::Scalar;
 
-    pub use ecmult::{ECMultContext, ECMultGenContext,
-                     ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
+    pub use ecmult::{ECMultContext, ECMultGenContext, ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
 }
 
 /// Utilities to manipulate the secp256k1 curve parameters.
@@ -58,23 +59,23 @@ pub mod util {
     pub const TAG_PUBKEY_HYBRID_EVEN: u8 = 0x06;
     pub const TAG_PUBKEY_HYBRID_ODD: u8 = 0x07;
 
-    pub use group::{AFFINE_INFINITY, JACOBIAN_INFINITY,
-                    set_table_gej_var, globalz_set_table_gej};
-    pub use ecmult::{WINDOW_A, WINDOW_G, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G,
-                     odd_multiples_table};
+    pub use ecmult::{
+        odd_multiples_table, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G, WINDOW_A, WINDOW_G,
+    };
+    pub use group::{globalz_set_table_gej, set_table_gej_var, AFFINE_INFINITY, JACOBIAN_INFINITY};
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// Public key on a secp256k1 curve.
 pub struct PublicKey(Affine);
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Secret key (256-bit) on a secp256k1 curve.
 pub struct SecretKey(Scalar);
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// An ECDSA signature.
 pub struct Signature {
     pub r: Scalar,
-    pub s: Scalar
+    pub s: Scalar,
 }
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Tag used for public key recovery from signatures.
@@ -111,8 +112,8 @@ impl PublicKey {
         }
         let mut elem = Affine::default();
         elem.set_xy(&x, &y);
-        if (p[0] == TAG_PUBKEY_HYBRID_EVEN || p[0] == TAG_PUBKEY_HYBRID_ODD) &&
-            (y.is_odd() != (p[0] == TAG_PUBKEY_HYBRID_ODD))
+        if (p[0] == TAG_PUBKEY_HYBRID_EVEN || p[0] == TAG_PUBKEY_HYBRID_ODD)
+            && (y.is_odd() != (p[0] == TAG_PUBKEY_HYBRID_ODD))
         {
             return Err(Error::InvalidPublicKey);
         }
@@ -144,7 +145,7 @@ impl PublicKey {
     }
 
     pub fn serialize_compressed(&self) -> [u8; 33] {
-        use util::{TAG_PUBKEY_ODD, TAG_PUBKEY_EVEN};
+        use util::{TAG_PUBKEY_EVEN, TAG_PUBKEY_ODD};
 
         debug_assert!(!self.0.is_infinity());
 
@@ -200,6 +201,30 @@ impl SecretKey {
 impl Into<Scalar> for SecretKey {
     fn into(self) -> Scalar {
         self.0
+    }
+}
+
+impl Add for SecretKey {
+    type Output = SecretKey;
+
+    fn add(self, rhs: SecretKey) -> <Self as Add<SecretKey>>::Output {
+        SecretKey(self.0 + rhs.0)
+    }
+}
+
+impl Mul for SecretKey {
+    type Output = SecretKey;
+
+    fn mul(self, rhs: SecretKey) -> <Self as Mul<SecretKey>>::Output {
+        SecretKey(self.0 * rhs.0)
+    }
+}
+
+impl Neg for SecretKey {
+    type Output = SecretKey;
+
+    fn neg(self) -> <Self as Neg>::Output {
+        SecretKey(-self.0)
     }
 }
 
@@ -284,8 +309,14 @@ pub fn verify(message: &Message, signature: &Signature, pubkey: &PublicKey) -> b
 }
 
 /// Recover public key from a signed message.
-pub fn recover(message: &Message, signature: &Signature, recovery_id: &RecoveryId) -> Result<PublicKey, Error> {
-    ECMULT_CONTEXT.recover_raw(&signature.r, &signature.s, recovery_id.0, &message.0).map(|v| PublicKey(v))
+pub fn recover(
+    message: &Message,
+    signature: &Signature,
+    recovery_id: &RecoveryId,
+) -> Result<PublicKey, Error> {
+    ECMULT_CONTEXT
+        .recover_raw(&signature.r, &signature.s, recovery_id.0, &message.0)
+        .map(|v| PublicKey(v))
 }
 
 /// Sign a message using the secret key.
@@ -309,10 +340,7 @@ pub fn sign(message: &Message, seckey: &SecretKey) -> Result<(Signature, Recover
         nonce = Scalar::default();
     }
     if let Ok((sigr, sigs, recid)) = result {
-        return Ok((Signature {
-            r: sigr,
-            s: sigs,
-        }, RecoveryId(recid)));
+        return Ok((Signature { r: sigr, s: sigs }, RecoveryId(recid)));
     } else {
         return Err(result.err().unwrap());
     }

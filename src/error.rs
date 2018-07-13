@@ -4,5 +4,5 @@ pub enum Error {
     InvalidPublicKey,
     InvalidSecretKey,
     InvalidRecoveryId,
-    InvalidMessage
+    InvalidMessage,
 }

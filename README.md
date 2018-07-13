@@ -1,13 +1,8 @@
 # SECP256K1 Implementation in Pure Rust
 
-* [Cargo](https://crates.io/crates/libsecp256k1)
-* [Documentation](https://docs.rs/libsecp256k1)
+Forked from [this crate](https://crates.io/crates/libsecp256k1)
 
-SECP256K1 implementation with `no_std` support. Currently we have
-implementation for:
+This is not intended to be used in production code, but more as a easy-to-use library to offer a playground for testing 
+ideas.
 
-* Convert a private key to a public key.
-* Sign messages.
-* Signature verification.
-* Public key recovery from signed messages.
-* Shared secrets.
+See the tests for examples on how the library might be used.

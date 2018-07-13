@@ -1,8 +1,8 @@
-use sha2::Sha256;
 use digest::{FixedOutput, Input};
+use ecmult::ECMultContext;
 use group::{Affine, Jacobian};
 use scalar::Scalar;
-use ecmult::ECMultContext;
+use sha2::Sha256;
 
 impl ECMultContext {
     pub fn ecdh_raw(&self, point: &Affine, scalar: &Scalar) -> Option<[u8; 32]> {

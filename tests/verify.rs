@@ -3,9 +3,7 @@ extern crate secp256k1;
 extern crate secp256k1_test;
 
 use rand::thread_rng;
-use secp256k1::ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
-use secp256k1::signature::sign;
-use secp256k1::{recover, verify};
+use secp256k1::ecmult::ECMULT_CONTEXT;
 use secp256k1::{Message, PublicKey, RecoveryId, SecretKey, SharedSecret, Signature};
 use secp256k1_test::ecdh::SharedSecret as SecpSharedSecret;
 use secp256k1_test::key;
@@ -41,7 +39,7 @@ fn test_verify() {
     let ctx_sig = Signature::parse(&signature_a);
 
     secp256k1.verify(&message, &signature, &pubkey).unwrap();
-    assert!(verify(&ctx_message, &ctx_sig, &ctx_pubkey));
+    assert!(Signature::verify(&ctx_message, &ctx_sig, &ctx_pubkey));
     let mut f_ctx_sig = ctx_sig.clone();
     f_ctx_sig.r.set_int(0);
     if f_ctx_sig.r != ctx_sig.r {
@@ -89,7 +87,7 @@ fn test_recover() {
     let ctx_sig = Signature::parse(&signature_a);
 
     // secp256k1.recover(&message, &signature).unwrap();
-    let ctx_pubkey = recover(
+    let ctx_pubkey = Signature::recover(
         &ctx_message,
         &ctx_sig,
         &RecoveryId::parse(rec_id.to_i32() as u8).unwrap(),
@@ -203,13 +201,13 @@ fn test_sign_verify() {
     let seckey = SecretKey::parse(&seckey_a).unwrap();
     let message = Message::parse(&message_arr);
 
-    let (sig, recid) = sign(&message, &seckey).unwrap();
+    let (sig, recid) = Message::sign(&message, &seckey).unwrap();
 
     // Self verify
-    assert!(verify(&message, &sig, &pubkey));
+    assert!(Signature::verify(&message, &sig, &pubkey));
 
     // Self recover
-    let recovered_pubkey = recover(&message, &sig, &recid).unwrap();
+    let recovered_pubkey = Signature::recover(&message, &sig, &recid).unwrap();
     let rpa = recovered_pubkey.serialize();
     let opa = pubkey.serialize();
     let rpr: &[u8] = &rpa;
@@ -247,11 +245,11 @@ fn test_failing_sign_verify() {
     let message_arr = [6u8; 32];
     let message = Message::parse(&message_arr);
 
-    let (sig, recid) = sign(&message, &seckey).unwrap();
+    let (sig, recid) = Message::sign(&message, &seckey).unwrap();
     let tmp: u8 = recid.into();
     assert_eq!(tmp, 1u8);
 
-    let recovered_pubkey = recover(&message, &sig, &recid).unwrap();
+    let recovered_pubkey = Signature::recover(&message, &sig, &recid).unwrap();
     let rpa = recovered_pubkey.serialize();
     let opa = pubkey.serialize();
     let rpr: &[u8] = &rpa;

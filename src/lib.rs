@@ -19,19 +19,16 @@ mod ecdh;
 mod ecdsa;
 pub mod ecmult;
 mod error;
-mod scalar;
-
-pub use error::Error;
-
 mod keys;
+mod message;
 mod recovery_id;
+mod scalar;
 pub mod signature;
 pub mod util;
-mod message;
 
 pub use ecdh::SharedSecret;
+pub use error::Error;
 pub use keys::{PublicKey, SecretKey};
-pub use signature::{recover, verify, Signature};
 pub use message::Message;
 pub use recovery_id::RecoveryId;
-
+pub use signature::Signature;

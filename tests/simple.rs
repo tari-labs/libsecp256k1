@@ -1,12 +1,12 @@
+extern crate hex;
 extern crate rand;
 extern crate secp256k1;
-extern crate hex;
 #[macro_use]
 extern crate arrayref;
 
 use rand::thread_rng;
-use secp256k1::{PublicKey, SecretKey};
 use secp256k1::Error;
+use secp256k1::{PublicKey, SecretKey};
 
 #[test]
 fn create_secret() {
@@ -67,20 +67,23 @@ fn valid_keys() {
     let key = from_hex("0384526253c27c7aef56c7b71a5cd25bebb66dddda437826defc5b2568bde81f07");
     assert!(key.is_ok());
     let key = from_hex("");
-    assert_eq!(key.err().unwrap(),Error::InvalidPublicKey);
+    assert_eq!(key.err().unwrap(), Error::InvalidPublicKey);
     let key = from_hex("0abcdefgh");
-    assert_eq!(key.err().unwrap(),Error::InvalidHex);
+    assert_eq!(key.err().unwrap(), Error::InvalidHex);
     let key = from_hex("9384526253c27c7aef56c7b71a5cd25bebb66dddda437826defc5b2568bde81f07");
-    assert_eq!(key.err().unwrap(),Error::InvalidPublicKey);
+    assert_eq!(key.err().unwrap(), Error::InvalidPublicKey);
     let key = from_hex("04fe53c78e36b86aae8082484a4007b706d5678cabb92d178fc95020d4d8dc41ef44cfbb8dfa7a593c7910a5b6f94d079061a7766cbeed73e24ee4f654f1e51904");
     assert!(key.is_ok());
 }
 
 #[test]
 fn add_public_keys() {
-    let p1 = from_hex("0241cc121c419921942add6db6482fb36243faf83317c866d2a28d8c6d7089f7ba").unwrap();
-    let p2 = from_hex("02e6642fd69bd211f93f7f1f36ca51a26a5290eb2dd1b0d8279a87bb0d480c8443").unwrap();
-    let exp_sum = from_hex("0384526253c27c7aef56c7b71a5cd25bebb66dddda437826defc5b2568bde81f07").unwrap();
+    let p1 =
+        from_hex("0241cc121c419921942add6db6482fb36243faf83317c866d2a28d8c6d7089f7ba").unwrap();
+    let p2 =
+        from_hex("02e6642fd69bd211f93f7f1f36ca51a26a5290eb2dd1b0d8279a87bb0d480c8443").unwrap();
+    let exp_sum =
+        from_hex("0384526253c27c7aef56c7b71a5cd25bebb66dddda437826defc5b2568bde81f07").unwrap();
     let sum = p1 + p2;
     assert_eq!(p2 + p1, sum);
     assert_eq!(sum, exp_sum);
@@ -96,9 +99,8 @@ fn scalar_multiplication_is_addition() {
 pub fn from_hex(h: &str) -> Result<PublicKey, Error> {
     let data = hex::decode(h).or(Err(Error::InvalidHex))?;
     match data.len() {
-        33 => PublicKey::parse_compressed(array_ref!(data,0,33)),
-        65 => PublicKey::parse(array_ref!(data,0,65)),
+        33 => PublicKey::parse_compressed(array_ref!(data, 0, 33)),
+        65 => PublicKey::parse(array_ref!(data, 0, 65)),
         _ => Err(Error::InvalidPublicKey),
     }
 }
-

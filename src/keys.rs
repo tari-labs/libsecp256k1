@@ -1,11 +1,11 @@
-use group::{Affine, Jacobian};
+use core::ops::{Add, Mul, Neg};
+use ecmult::ECMULT_CONTEXT;
 use ecmult::ECMULT_GEN_CONTEXT;
+use field::Field;
+use group::{Affine, Jacobian};
+use rand::Rng;
 use scalar::Scalar;
 use Error;
-use field::Field;
-use core::ops::{Add,Mul,Neg};
-use rand::Rng;
-use ecmult::ECMULT_CONTEXT;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Public key on a secp256k1 curve.
@@ -16,7 +16,6 @@ pub struct PublicKey(pub(crate) Affine);
 pub struct SecretKey(pub(crate) Scalar);
 
 impl PublicKey {
-
     pub fn from_secret_key(seckey: &SecretKey) -> PublicKey {
         let mut pj = Jacobian::default();
         ECMULT_GEN_CONTEXT.ecmult_gen(&mut pj, &seckey.0);
@@ -65,9 +64,9 @@ impl PublicKey {
         elem.set_xy(&x, &y);
         if (p[0] == TAG_PUBKEY_HYBRID_EVEN || p[0] == TAG_PUBKEY_HYBRID_ODD)
             && (y.is_odd() != (p[0] == TAG_PUBKEY_HYBRID_ODD))
-            {
-                return Err(Error::InvalidPublicKey);
-            }
+        {
+            return Err(Error::InvalidPublicKey);
+        }
         if elem.is_infinity() {
             return Err(Error::InvalidPublicKey);
         }
@@ -128,7 +127,7 @@ impl Add for PublicKey {
     fn add(self, rhs: PublicKey) -> <Self as Add<PublicKey>>::Output {
         let mut j1 = Jacobian::default();
         j1.set_ge(&self.0);
-        let j2 = j1.add_ge( &rhs.0);
+        let j2 = j1.add_ge(&rhs.0);
         let mut ret = Affine::default();
         ret.set_gej(&j2);
         PublicKey(ret)

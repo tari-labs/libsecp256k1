@@ -3,16 +3,16 @@ extern crate secp256k1;
 extern crate secp256k1_test;
 
 use rand::thread_rng;
+use secp256k1::ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
+use secp256k1::signature::sign;
+use secp256k1::{recover, verify};
+use secp256k1::{Message, PublicKey, RecoveryId, SecretKey, SharedSecret, Signature};
 use secp256k1_test::ecdh::SharedSecret as SecpSharedSecret;
 use secp256k1_test::key;
 use secp256k1_test::{
     Message as SecpMessage, RecoverableSignature as SecpRecoverableSignature,
     RecoveryId as SecpRecoveryId, Secp256k1, Signature as SecpSignature,
 };
-use secp256k1::signature::sign;
-use secp256k1::{Message, PublicKey, SecretKey, Signature, RecoveryId, SharedSecret};
-use secp256k1::{ recover, verify};
-use secp256k1::ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
 
 #[test]
 fn test_verify() {

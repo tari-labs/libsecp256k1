@@ -29,10 +29,9 @@ pub mod keys;
 pub mod signature;
 pub mod util;
 
-pub use keys::{SecretKey, PublicKey};
-pub use signature::{ Signature, verify, recover};
 pub use ecdh::SharedSecret;
-
+pub use keys::{PublicKey, SecretKey};
+pub use signature::{recover, verify, Signature};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Tag used for public key recovery from signatures.
@@ -41,7 +40,6 @@ pub struct RecoveryId(u8);
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// Hashed message input to an ECDSA signature.
 pub struct Message(pub Scalar);
-
 
 impl Message {
     pub fn parse(p: &[u8; 32]) -> Message {
@@ -81,6 +79,3 @@ impl Into<i32> for RecoveryId {
         self.0 as i32
     }
 }
-
-
-

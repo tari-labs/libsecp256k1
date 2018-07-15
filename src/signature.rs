@@ -1,9 +1,9 @@
-use scalar::Scalar;
-use { Message, PublicKey, SecretKey, RecoveryId, Error};
+use ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
 use hmac_drbg::HmacDRBG;
-use typenum::U32;
+use scalar::Scalar;
 use sha2::Sha256;
-use ecmult::{ ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
+use typenum::U32;
+use {Error, Message, PublicKey, RecoveryId, SecretKey};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// An ECDSA signature.
@@ -64,9 +64,9 @@ pub fn sign(message: &Message, seckey: &SecretKey) -> Result<(Signature, Recover
 
     let result = ECMULT_GEN_CONTEXT.sign_raw(&seckey.0, &message.0, &nonce);
     #[allow(unused_assignments)]
-        {
-            nonce = Scalar::default();
-        }
+    {
+        nonce = Scalar::default();
+    }
     if let Ok((sigr, sigs, recid)) = result {
         return Ok((Signature { r: sigr, s: sigs }, RecoveryId(recid)));
     } else {

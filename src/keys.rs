@@ -16,6 +16,7 @@ pub struct PublicKey(pub(crate) Affine);
 pub struct SecretKey(pub(crate) Scalar);
 
 impl PublicKey {
+    /// Create a public key from a private key by performing P = k.G
     pub fn from_secret_key(seckey: &SecretKey) -> PublicKey {
         let mut pj = Jacobian::default();
         ECMULT_GEN_CONTEXT.ecmult_gen(&mut pj, &seckey.0);
@@ -24,6 +25,9 @@ impl PublicKey {
         PublicKey(p)
     }
 
+    /// Create a public key from a compressed public key. Remember that Public keys are just points on the elliptic
+    /// curve, so you can derive the full point by supplying the x-coordinate and the parity. By convention, compressed
+    /// public keys hold the parity in the first byte and the x-coordinate in the next 32 bytes.
     pub fn parse_compressed(p: &[u8; 33]) -> Result<PublicKey, Error> {
         if !(p[0] == 0x02 || p[0] == 0x03) {
             return Err(Error::InvalidPublicKey);
@@ -46,6 +50,8 @@ impl PublicKey {
         }
     }
 
+    /// Create a PublicKey from 65-byte binary representation of a public key. The first byte is a prefix (must be 4,6,
+    /// or 7). The next 32 bytes represent the x-coordinate; and the last 32 bytes represent thew y-coordinate.
     pub fn parse(p: &[u8; 65]) -> Result<PublicKey, Error> {
         use util::{TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
 
@@ -77,6 +83,8 @@ impl PublicKey {
         }
     }
 
+    /// Return the 65-bit serialization of the public key. The first byte is always 0x04 to represent an uncompressed
+    ///public key.
     pub fn serialize(&self) -> [u8; 65] {
         use util::TAG_PUBKEY_UNCOMPRESSED;
 
@@ -94,6 +102,7 @@ impl PublicKey {
         ret
     }
 
+    /// Return the 33-bit serialization of the compressed public key.
     pub fn serialize_compressed(&self) -> [u8; 33] {
         use util::{TAG_PUBKEY_EVEN, TAG_PUBKEY_ODD};
 
@@ -135,6 +144,7 @@ impl Add for PublicKey {
 }
 
 impl SecretKey {
+    /// Read a 32-byte array into a Secret key
     pub fn parse(p: &[u8; 32]) -> Result<SecretKey, Error> {
         let mut elem = Scalar::default();
         if !elem.set_b32(p) && !elem.is_zero() {
@@ -144,6 +154,16 @@ impl SecretKey {
         }
     }
 
+    /// Create a new random secret key
+    /// # Examples
+    /// ```
+    /// extern crate rand;
+    /// extern crate secp256k1;
+    /// use rand::thread_rng;
+    /// use secp256k1::SecretKey;
+    ///
+    /// let k1 = SecretKey::random(&mut thread_rng());
+    /// ```
     pub fn random<R: Rng>(rng: &mut R) -> SecretKey {
         loop {
             let mut ret = [0u8; 32];
@@ -156,6 +176,7 @@ impl SecretKey {
         }
     }
 
+    /// Represent a SecretKey as a 32-byte array
     pub fn serialize(&self) -> [u8; 32] {
         self.0.b32()
     }

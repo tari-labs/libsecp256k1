@@ -1,8 +1,9 @@
 use digest::{FixedOutput, Input};
-use ecmult::ECMultContext;
 use group::{Affine, Jacobian};
 use scalar::Scalar;
 use sha2::Sha256;
+use {PublicKey, SecretKey, Error};
+use ecmult::{ ECMultContext, ECMULT_CONTEXT};
 
 impl ECMultContext {
     pub fn ecdh_raw(&self, point: &Affine, scalar: &Scalar) -> Option<[u8; 32]> {
@@ -34,5 +35,26 @@ impl ECMultContext {
         }
 
         Some(result)
+    }
+}
+
+/// Shared secret using ECDH.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct SharedSecret([u8; 32]);
+
+impl SharedSecret {
+    pub fn new(pubkey: &PublicKey, seckey: &SecretKey) -> Result<SharedSecret, Error> {
+        let inner = match ECMULT_CONTEXT.ecdh_raw(&pubkey.0, &seckey.0) {
+            Some(val) => val,
+            None => return Err(Error::InvalidSecretKey),
+        };
+
+        Ok(SharedSecret(inner))
+    }
+}
+
+impl AsRef<[u8]> for SharedSecret {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
     }
 }

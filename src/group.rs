@@ -4,7 +4,7 @@ use field::{Field, FieldStorage};
 /// Define an affine group element constant.
 macro_rules! affine_const {
     ($x:expr, $y:expr) => {
-        $crate::curve::Affine {
+        $crate::group::Affine {
             x: $x,
             y: $y,
             infinity: false,
@@ -29,7 +29,7 @@ macro_rules! jacobian_const {
 /// Define an affine group storage constant.
 macro_rules! affine_storage_const {
     ($x:expr, $y:expr) => {
-        $crate::curve::AffineStorage { x: $x, y: $y }
+        $crate::group::AffineStorage { x: $x, y: $y }
     };
 }
 

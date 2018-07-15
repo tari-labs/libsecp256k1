@@ -7,7 +7,6 @@ extern crate arrayref;
 use rand::thread_rng;
 use secp256k1::{PublicKey, SecretKey};
 use secp256k1::Error;
-use secp256k1::curve::{Jacobian, Affine};
 
 #[test]
 fn create_secret() {

@@ -2,10 +2,6 @@
 //! signatures. The secp256k1 curve is used excusively in Bitcoin and
 //! Ethereum alike cryptocurrencies.
 
-#![deny(
-    unused_import_braces, unused_imports, unused_comparisons, unused_must_use, unused_variables,
-    non_shorthand_field_patterns, unreachable_code, unused_parens
-)]
 #![no_std]
 extern crate digest;
 extern crate hmac_drbg;
@@ -65,35 +61,63 @@ pub mod util {
     pub use group::{globalz_set_table_gej, set_table_gej_var, AFFINE_INFINITY, JACOBIAN_INFINITY};
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Public key on a secp256k1 curve.
 pub struct PublicKey(Affine);
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Secret key (256-bit) on a secp256k1 curve.
 pub struct SecretKey(Scalar);
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// An ECDSA signature.
 pub struct Signature {
     pub r: Scalar,
     pub s: Scalar,
 }
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Tag used for public key recovery from signatures.
 pub struct RecoveryId(u8);
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// Hashed message input to an ECDSA signature.
 pub struct Message(pub Scalar);
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// Shared secret using ECDH.
 pub struct SharedSecret([u8; 32]);
 
 impl PublicKey {
+
     pub fn from_secret_key(seckey: &SecretKey) -> PublicKey {
         let mut pj = Jacobian::default();
         ECMULT_GEN_CONTEXT.ecmult_gen(&mut pj, &seckey.0);
         let mut p = Affine::default();
         p.set_gej(&pj);
         PublicKey(p)
+    }
+
+    pub fn parse_compressed(p: &[u8; 33]) -> Result<PublicKey, Error> {
+        if !(p[0] == 0x02 || p[0] == 0x03) {
+            return Err(Error::InvalidPublicKey);
+        }
+        let mut x = Field::default();
+        if !x.set_b32(array_ref!(p, 1, 32)) {
+            return Err(Error::InvalidPublicKey);
+        }
+        let mut elem = Affine::default();
+        if !elem.set_xo_var(&x, p[0] == 0x03) {
+            return Err(Error::InvalidPublicKey);
+        }
+        if elem.is_infinity() {
+            return Err(Error::InvalidPublicKey);
+        }
+        if elem.is_valid_var() {
+            return Ok(PublicKey(elem));
+        } else {
+            return Err(Error::InvalidPublicKey);
+        }
     }
 
     pub fn parse(p: &[u8; 65]) -> Result<PublicKey, Error> {
@@ -114,9 +138,9 @@ impl PublicKey {
         elem.set_xy(&x, &y);
         if (p[0] == TAG_PUBKEY_HYBRID_EVEN || p[0] == TAG_PUBKEY_HYBRID_ODD)
             && (y.is_odd() != (p[0] == TAG_PUBKEY_HYBRID_ODD))
-        {
-            return Err(Error::InvalidPublicKey);
-        }
+            {
+                return Err(Error::InvalidPublicKey);
+            }
         if elem.is_infinity() {
             return Err(Error::InvalidPublicKey);
         }
@@ -171,6 +195,19 @@ impl Into<Affine> for PublicKey {
     }
 }
 
+impl Add for PublicKey {
+    type Output = PublicKey;
+
+    fn add(self, rhs: PublicKey) -> <Self as Add<PublicKey>>::Output {
+        let mut j1 = Jacobian::default();
+        j1.set_ge(&self.0);
+        let j2 = j1.add_ge( &rhs.0);
+        let mut ret = Affine::default();
+        ret.set_gej(&j2);
+        PublicKey(ret)
+    }
+}
+
 impl SecretKey {
     pub fn parse(p: &[u8; 32]) -> Result<SecretKey, Error> {
         let mut elem = Scalar::default();
@@ -212,11 +249,23 @@ impl Add for SecretKey {
     }
 }
 
-impl Mul for SecretKey {
+impl Mul<SecretKey> for SecretKey {
     type Output = SecretKey;
 
-    fn mul(self, rhs: SecretKey) -> <Self as Mul<SecretKey>>::Output {
+    fn mul(self, rhs: SecretKey) -> SecretKey {
         SecretKey(self.0 * rhs.0)
+    }
+}
+
+impl Mul<PublicKey> for SecretKey {
+    type Output = PublicKey;
+
+    fn mul(self, rhs: PublicKey) -> PublicKey {
+        let mut pj = Jacobian::default();
+        ECMULT_CONTEXT.ecmult_const(&mut pj, &rhs.0, &self.0);
+        let mut p = Affine::default();
+        p.set_gej(&pj);
+        PublicKey(p)
     }
 }
 
@@ -336,9 +385,9 @@ pub fn sign(message: &Message, seckey: &SecretKey) -> Result<(Signature, Recover
 
     let result = ECMULT_GEN_CONTEXT.sign_raw(&seckey.0, &message.0, &nonce);
     #[allow(unused_assignments)]
-    {
-        nonce = Scalar::default();
-    }
+        {
+            nonce = Scalar::default();
+        }
     if let Ok((sigr, sigs, recid)) = result {
         return Ok((Signature { r: sigr, s: sigs }, RecoveryId(recid)));
     } else {

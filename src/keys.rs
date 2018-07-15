@@ -44,6 +44,8 @@ impl PublicKey {
             return Err(Error::InvalidPublicKey);
         }
         if elem.is_valid_var() {
+            elem.x.normalize();
+            elem.y.normalize();
             return Ok(PublicKey(elem));
         } else {
             return Err(Error::InvalidPublicKey);

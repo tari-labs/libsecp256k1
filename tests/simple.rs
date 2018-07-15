@@ -77,6 +77,25 @@ fn valid_keys() {
 }
 
 #[test]
+fn serlialize_deserialize() {
+    let key = from_hex("0384526253c27c7aef56c7b71a5cd25bebb66dddda437826defc5b2568bde81f07").unwrap();
+    let des = key.serialize();
+    let key2 = PublicKey::parse(&des).unwrap();
+    println!("{:?}\n{:?}", key, key2);
+    assert_eq!(key, key2);
+
+    let key = from_hex("0241cc121c419921942add6db6482fb36243faf83317c866d2a28d8c6d7089f7ba").unwrap();
+    let des = key.serialize_compressed();
+    let key2 = PublicKey::parse_compressed(&des).unwrap();
+    assert_eq!(key, key2);
+
+    let key = from_hex("04fe53c78e36b86aae8082484a4007b706d5678cabb92d178fc95020d4d8dc41ef44cfbb8dfa7a593c7910a5b6f94d079061a7766cbeed73e24ee4f654f1e51904").unwrap();
+    let des = key.serialize();
+    let key2 = PublicKey::parse(&des).unwrap();
+    assert_eq!(key, key2);
+}
+
+#[test]
 fn add_public_keys() {
     let p1 =
         from_hex("0241cc121c419921942add6db6482fb36243faf83317c866d2a28d8c6d7089f7ba").unwrap();

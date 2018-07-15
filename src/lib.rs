@@ -21,38 +21,21 @@ pub mod ecmult;
 mod error;
 mod scalar;
 
-use scalar::Scalar;
-
 pub use error::Error;
 
-pub mod keys;
+mod keys;
 pub mod signature;
 pub mod util;
+pub mod message;
 
 pub use ecdh::SharedSecret;
 pub use keys::{PublicKey, SecretKey};
 pub use signature::{recover, verify, Signature};
+pub use message::Message;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Tag used for public key recovery from signatures.
 pub struct RecoveryId(u8);
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-/// Hashed message input to an ECDSA signature.
-pub struct Message(pub Scalar);
-
-impl Message {
-    pub fn parse(p: &[u8; 32]) -> Message {
-        let mut m = Scalar::default();
-        m.set_b32(p);
-
-        Message(m)
-    }
-
-    pub fn serialize(&self) -> [u8; 32] {
-        self.0.b32()
-    }
-}
 
 impl RecoveryId {
     pub fn parse(p: u8) -> Result<RecoveryId, Error> {

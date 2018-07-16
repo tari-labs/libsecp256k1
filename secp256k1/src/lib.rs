@@ -12,9 +12,9 @@ extern crate typenum;
 extern crate arrayref;
 
 #[macro_use]
-mod field;
+pub mod field;
 #[macro_use]
-mod group;
+pub mod group;
 mod ecdh;
 mod ecdsa;
 pub mod ecmult;

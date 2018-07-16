@@ -32,3 +32,8 @@ pub use keys::{PublicKey, SecretKey};
 pub use message::Message;
 pub use recovery_id::RecoveryId;
 pub use signature::Signature;
+
+#[cfg(test)]
+extern crate hex;
+#[cfg(test)]
+extern crate secp256k1_test;

@@ -1,4 +1,4 @@
-use core::ops::{Add, Mul, Neg};
+use core::ops::{Add, Mul, Neg, Sub};
 use ecmult::ECMULT_CONTEXT;
 use ecmult::ECMULT_GEN_CONTEXT;
 use field::Field;
@@ -145,6 +145,15 @@ impl Add for PublicKey {
     }
 }
 
+impl Sub for PublicKey {
+    type Output = PublicKey;
+
+    fn sub(self, rhs: PublicKey) -> PublicKey {
+        let ret = rhs.0.neg();
+        self + PublicKey(ret)
+    }
+}
+
 impl SecretKey {
     /// Read a 32-byte array into a Secret key
     pub fn parse(p: &[u8; 32]) -> Result<SecretKey, Error> {
@@ -182,6 +191,10 @@ impl SecretKey {
     pub fn serialize(&self) -> [u8; 32] {
         self.0.b32()
     }
+
+    pub fn inv(&self) -> SecretKey {
+        SecretKey(self.0.inv())
+    }
 }
 
 impl Into<Scalar> for SecretKey {
@@ -195,6 +208,14 @@ impl Add for SecretKey {
 
     fn add(self, rhs: SecretKey) -> <Self as Add<SecretKey>>::Output {
         SecretKey(self.0 + rhs.0)
+    }
+}
+
+impl Sub for SecretKey {
+    type Output = SecretKey;
+
+    fn sub(self, rhs: SecretKey) -> SecretKey {
+        SecretKey(self.0 + rhs.0.neg())
     }
 }
 
@@ -231,10 +252,18 @@ mod tests {
     use rand::thread_rng;
     use {Error, PublicKey, SecretKey};
     use hex;
+    use scalar::Scalar;
 
     #[test]
     fn create_secret() {
         let _ = SecretKey::random(&mut thread_rng());
+    }
+
+    #[test]
+    fn inverse_secret() {
+        let k = SecretKey::random(&mut thread_rng());
+        let one = small(1);
+        assert_eq!(k * k.inv(), one);
     }
 
     #[test]
@@ -273,6 +302,15 @@ mod tests {
         let one = small(1);
         let two = small(2);
         assert_eq!(one * two, two);
+    }
+
+    #[test]
+    fn scalar_subtraction() {
+        let k1 = SecretKey::random(&mut thread_rng());
+        let k2 = SecretKey::random(&mut thread_rng());
+        let z: Scalar = (k1 - k1).into();
+        assert!(z.is_zero());
+        assert_eq!(k1 + k2 -k2, k1);
     }
 
     fn small(val: u8) -> SecretKey {

@@ -1,9 +1,9 @@
 #![feature(test)]
 
 extern crate rand;
-extern crate secp256k1;
 extern crate secp256k1_test;
 extern crate test;
+
 #[macro_use]
 extern crate arrayref;
 

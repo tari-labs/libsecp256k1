@@ -1,7 +1,7 @@
 use ecmult::ECMULT_GEN_CONTEXT;
 use hmac_drbg::HmacDRBG;
 use scalar::Scalar;
-use sha2::Sha256;
+use sha2::{Digest, Sha256};
 use typenum::U32;
 use {Error, RecoveryId, SecretKey, Signature};
 
@@ -10,6 +10,12 @@ use {Error, RecoveryId, SecretKey, Signature};
 pub struct Message(pub Scalar);
 
 impl Message {
+    pub fn hash(b: &[u8]) -> Result<Message, Error> {
+        let hash = Sha256::digest(b);
+        let s = SecretKey::parse(array_ref!(hash,0, 32))?;
+        Ok(Message::from(s))
+    }
+
     pub fn parse(p: &[u8; 32]) -> Message {
         let mut m = Scalar::default();
         m.set_b32(p);
@@ -47,4 +53,16 @@ impl Message {
             return Err(result.err().unwrap());
         }
     }
+}
+
+impl From<SecretKey> for Message {
+    fn from(k: SecretKey) -> Self {
+        Message(k.0)
+    }
+}
+
+#[test]
+fn message_constructor() {
+    let s = b"secret";
+    assert!(Message::hash(s).is_ok());
 }

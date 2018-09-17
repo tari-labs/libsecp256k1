@@ -1,5 +1,5 @@
 [package]
-name = "secp256k1"
+name = "libsecp256k1-rs"
 description = "secp256k1 implementation and utilities"
 license = "BSD-3-Clause"
 version = "0.2.1"

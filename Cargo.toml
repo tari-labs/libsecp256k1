@@ -1,8 +1,8 @@
 [package]
-name = "libsecp256k1-rs"
+name = "secp256k1"
 description = "secp256k1 implementation and utilities"
 license = "BSD-3-Clause"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Wei Tang <hi@that.world>", "CjS77 <>"]
 repository = "https://github.com/tari-labs/libsecp256k1-rs/"
 keywords = [ "crypto", "ECDSA", "secp256k1" ]
@@ -21,8 +21,6 @@ hex = "0.3.2"
 
 [workspace]
 members = [
-  "secp256k1",
   "./gen/ecmult",
   "./gen/genmult",
-  "schnorr",
 ]

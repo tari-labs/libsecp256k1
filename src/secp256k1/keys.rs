@@ -1,11 +1,11 @@
-use core::ops::{Add, Mul, Neg, Sub};
 use ecmult::ECMULT_CONTEXT;
 use ecmult::ECMULT_GEN_CONTEXT;
-use field::Field;
-use group::{Affine, Jacobian};
-use rand::Rng;
-use scalar::Scalar;
-use Error;
+use secp256k1::scalar::Scalar;
+use secp256k1::error::Error;
+use std::ops::{Add, Neg, Sub, Mul};
+use super::rand::Rng;
+use secp256k1::group::{Jacobian, Affine};
+use secp256k1::field::Field;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Public key on a secp256k1 curve.
@@ -55,7 +55,7 @@ impl PublicKey {
     /// Create a PublicKey from 65-byte binary representation of a public key. The first byte is a prefix (must be 4,6,
     /// or 7). The next 32 bytes represent the x-coordinate; and the last 32 bytes represent thew y-coordinate.
     pub fn parse(p: &[u8; 65]) -> Result<PublicKey, Error> {
-        use util::{TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
+        use secp256k1::util::{TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
 
         if !(p[0] == 0x04 || p[0] == 0x06 || p[0] == 0x07) {
             return Err(Error::InvalidPublicKey);
@@ -72,9 +72,9 @@ impl PublicKey {
         elem.set_xy(&x, &y);
         if (p[0] == TAG_PUBKEY_HYBRID_EVEN || p[0] == TAG_PUBKEY_HYBRID_ODD)
             && (y.is_odd() != (p[0] == TAG_PUBKEY_HYBRID_ODD))
-        {
-            return Err(Error::InvalidPublicKey);
-        }
+            {
+                return Err(Error::InvalidPublicKey);
+            }
         if elem.is_infinity() {
             return Err(Error::InvalidPublicKey);
         }
@@ -88,7 +88,7 @@ impl PublicKey {
     /// Return the 65-bit serialization of the public key. The first byte is always 0x04 to represent an uncompressed
     ///public key.
     pub fn serialize(&self) -> [u8; 65] {
-        use util::TAG_PUBKEY_UNCOMPRESSED;
+        use secp256k1::util::TAG_PUBKEY_UNCOMPRESSED;
 
         debug_assert!(!self.0.is_infinity());
 
@@ -106,7 +106,7 @@ impl PublicKey {
 
     /// Return the 33-bit serialization of the compressed public key.
     pub fn serialize_compressed(&self) -> [u8; 33] {
-        use util::{TAG_PUBKEY_EVEN, TAG_PUBKEY_ODD};
+        use secp256k1::util::{TAG_PUBKEY_EVEN, TAG_PUBKEY_ODD};
 
         debug_assert!(!self.0.is_infinity());
 
@@ -249,10 +249,10 @@ impl Neg for SecretKey {
 
 #[cfg(test)]
 mod tests {
-    use rand::thread_rng;
+    use secp256k1::rand::thread_rng;
     use {Error, PublicKey, SecretKey};
     use hex;
-    use scalar::Scalar;
+    use secp256k1::Scalar;
 
     #[test]
     fn create_secret() {
@@ -310,7 +310,7 @@ mod tests {
         let k2 = SecretKey::random(&mut thread_rng());
         let z: Scalar = (k1 - k1).into();
         assert!(z.is_zero());
-        assert_eq!(k1 + k2 -k2, k1);
+        assert_eq!(k1 + k2 - k2, k1);
     }
 
     fn small(val: u8) -> SecretKey {
@@ -384,5 +384,4 @@ mod tests {
             _ => Err(Error::InvalidPublicKey),
         }
     }
-
 }

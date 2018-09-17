@@ -1,6 +1,6 @@
-use field::Field;
-use group::{globalz_set_table_gej, Affine, AffineStorage, Jacobian};
-use scalar::Scalar;
+use secp256k1::Scalar;
+use secp256k1::group::{ Jacobian, Affine, AffineStorage, globalz_set_table_gej };
+use secp256k1::field::Field;
 
 pub const WINDOW_A: usize = 5;
 pub const WINDOW_G: usize = 16;

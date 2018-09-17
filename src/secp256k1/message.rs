@@ -1,9 +1,12 @@
 use ecmult::ECMULT_GEN_CONTEXT;
-use hmac_drbg::HmacDRBG;
-use scalar::Scalar;
-use sha2::{Digest, Sha256};
-use typenum::U32;
-use {Error, RecoveryId, SecretKey, Signature};
+use secp256k1::hmac_drbg::HmacDRBG;
+use super::sha2::{Digest, Sha256};
+use secp256k1::typenum::U32;
+use secp256k1::scalar::Scalar;
+use secp256k1::error::Error;
+use secp256k1::keys::{ SecretKey};
+use Signature;
+use secp256k1::recovery_id::RecoveryId;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// Hashed message input to an ECDSA signature.

@@ -1,5 +1,5 @@
 use secp256k1::{ PublicKey, SecretKey };
-use Challenge;
+use schnorr::challenge::Challenge;
 
 #[allow(non_snake_case)]
 pub struct Schnorr {}

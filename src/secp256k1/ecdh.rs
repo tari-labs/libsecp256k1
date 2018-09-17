@@ -1,9 +1,10 @@
-use digest::{FixedOutput, Input};
+use secp256k1::digest::{FixedOutput, Input};
 use ecmult::{ECMultContext, ECMULT_CONTEXT};
-use group::{Affine, Jacobian};
-use scalar::Scalar;
-use sha2::Sha256;
-use {Error, PublicKey, SecretKey};
+use secp256k1::group::{Affine, Jacobian};
+use secp256k1::scalar::Scalar;
+use super::sha2::Sha256;
+use secp256k1::keys::{ PublicKey, SecretKey };
+use secp256k1::error::Error;
 
 impl ECMultContext {
     pub fn ecdh_raw(&self, point: &Affine, scalar: &Scalar) -> Option<[u8; 32]> {

@@ -2,22 +2,20 @@
 //! signatures. The secp256k1 curve is used excusively in Bitcoin and
 //! Ethereum alike cryptocurrencies.
 
-#![no_std]
 extern crate digest;
 extern crate hmac_drbg;
 extern crate rand;
 extern crate sha2;
 extern crate typenum;
-#[macro_use]
-extern crate arrayref;
+
 
 #[macro_use]
 pub mod field;
 #[macro_use]
 pub mod group;
+
 mod ecdh;
 mod ecdsa;
-pub mod ecmult;
 mod error;
 mod keys;
 mod message;
@@ -26,12 +24,13 @@ mod scalar;
 pub mod signature;
 pub mod util;
 
-pub use ecdh::SharedSecret;
-pub use error::Error;
-pub use keys::{PublicKey, SecretKey};
-pub use message::Message;
-pub use recovery_id::RecoveryId;
-pub use signature::Signature;
+pub use self::ecdh::SharedSecret;
+pub use self::error::Error;
+pub use self::keys::{PublicKey, SecretKey};
+pub use self::message::Message;
+pub use self::recovery_id::RecoveryId;
+pub use self::signature::Signature;
+pub use self::scalar::Scalar;
 
 #[cfg(test)]
 extern crate hex;

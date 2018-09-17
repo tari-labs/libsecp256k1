@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate secp256k1;
 
 use secp256k1::group::{Affine, AffineStorage, Jacobian, AFFINE_G};

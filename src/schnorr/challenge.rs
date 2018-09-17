@@ -1,6 +1,7 @@
-use sha2::{ Digest, Sha256 };
-use secp256k1::{ Error, PublicKey, SecretKey };
+use secp256k1::{PublicKey, SecretKey};
 use secp256k1::Message;
+use secp256k1::Error;
+use sha2::{ Digest, Sha256 };
 
 /// Objects implementing Combinable can be serialized as bytes for use in producing hash challenges
 /// e.g. H( R || T || m)
@@ -15,7 +16,7 @@ impl Combinable for PublicKey {
     }
 }
 
-impl Combinable for [u8;32] {
+impl Combinable for [u8; 32] {
     fn as_bytes(&self) -> Vec<u8> {
         self.to_vec()
     }
@@ -46,7 +47,7 @@ impl Challenge {
         Challenge(h)
     }
 
-    pub fn as_scalar(&self) -> Result<SecretKey,Error> {
+    pub fn as_scalar(&self) -> Result<SecretKey, Error> {
         SecretKey::parse(&self.0)
     }
 }

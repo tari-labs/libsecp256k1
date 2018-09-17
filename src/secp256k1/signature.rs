@@ -1,6 +1,9 @@
+use secp256k1::message::Message;
+use secp256k1::scalar::Scalar;
+use secp256k1::keys::{ PublicKey };
+use secp256k1::error::Error;
+use secp256k1::recovery_id::RecoveryId;
 use ecmult::ECMULT_CONTEXT;
-use scalar::Scalar;
-use {Error, Message, PublicKey, RecoveryId};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// An ECDSA signature.
@@ -46,11 +49,11 @@ impl Signature {
 
 #[cfg(test)]
 mod tests {
-    use rand::thread_rng;
+    use secp256k1::rand::thread_rng;
     use super::ECMULT_CONTEXT;
     use {Message, PublicKey, RecoveryId, SecretKey, SharedSecret, Signature};
     use secp256k1_test::ecdh::SharedSecret as SecpSharedSecret;
-    use secp256k1_test::key;
+    use secp256k1_test::key as SecpKey;
     use secp256k1_test::{
         Message as SecpMessage, RecoverableSignature as SecpRecoverableSignature,
         RecoveryId as SecpRecoveryId, Secp256k1, Signature as SecpSignature,
@@ -301,7 +304,7 @@ mod tests {
         assert_eq!(rpr, opr);
     }
 
-    fn genkey(secp256k1: &Secp256k1) -> (key::PublicKey, key::SecretKey, PublicKey, SecretKey) {
+    fn genkey(secp256k1: &Secp256k1) -> (SecpKey::PublicKey, SecpKey::SecretKey, PublicKey, SecretKey) {
         let (secp_privkey, secp_pubkey) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
         let pubkey_arr = secp_pubkey.serialize_vec(&secp256k1, false);
         assert!(pubkey_arr.len() == 65);

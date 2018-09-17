@@ -1,4 +1,4 @@
-use Error;
+use secp256k1::error::Error;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Tag used for public key recovery from signatures.

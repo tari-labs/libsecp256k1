@@ -1,11 +1,9 @@
 //! "Raw" signature tests. The tests in this module illustrate features of digital signatures using raw ECC.
-extern crate secp256k1;
-extern crate schnorr;
 extern crate rand;
+extern crate secp256k1;
 
 use secp256k1::{ Message, PublicKey, SecretKey };
-use schnorr::Challenge;
-use schnorr::schnorr::Schnorr;
+use secp256k1::schnorr::{ Schnorr, Challenge };
 
 /// In a standard signature, we want to provide some information that proves that I know the private key for a
 /// signature for some message.
@@ -94,7 +92,7 @@ fn schnorr_signature() {
 #[allow(non_snake_case)]
 fn cancellation_attack() {
     // Create some keys for Alice and Bob
-    let (k_a, P_a, r_a, R_a) = get_keyset();
+    let (_k_a, P_a, _r_a, R_a) = get_keyset();
     let (k_b, P_b, r_b, R_b) = get_keyset();
     let m = Message::hash(b"password").unwrap();
     // Alice publishes P_a and R_a, which Bob uses to calculate Fr, a "fake" public nonce, and Fk, a fake Public key
@@ -157,6 +155,7 @@ fn two_two_multisig() {
 
 }
 
+#[allow(non_snake_case)]
 fn get_keyset() -> (SecretKey, PublicKey, SecretKey, PublicKey) {
     let mut rng = rand::thread_rng();
     let k = SecretKey::random(&mut rng);

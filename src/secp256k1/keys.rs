@@ -6,6 +6,7 @@ use std::ops::{Add, Neg, Sub, Mul};
 use super::rand::Rng;
 use secp256k1::group::{Jacobian, Affine};
 use secp256k1::field::Field;
+use hex;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Public key on a secp256k1 curve.
@@ -23,6 +24,15 @@ impl PublicKey {
         let mut p = Affine::default();
         p.set_gej(&pj);
         PublicKey(p)
+    }
+
+    pub fn from_hex(h: &str) -> Result<PublicKey, Error> {
+        let data = hex::decode(h).or(Err(Error::InvalidHex))?;
+        match data.len() {
+            33 => PublicKey::parse_compressed(array_ref!(data, 0, 33)),
+            65 => PublicKey::parse(array_ref!(data, 0, 65)),
+            _ => Err(Error::InvalidPublicKey),
+        }
     }
 
     /// Create a public key from a compressed public key. Remember that Public keys are just points on the elliptic
@@ -165,6 +175,14 @@ impl SecretKey {
         }
     }
 
+    pub fn from_hex(h: &str) -> Result<SecretKey, Error> {
+        let data = hex::decode(h).or(Err(Error::InvalidHex))?;
+        match data.len() {
+            32 => SecretKey::parse(array_ref!(data, 0, 32)),
+            _ => Err(Error::InvalidSecretKey),
+        }
+    }
+
     /// Create a new random secret key
     /// # Examples
     /// ```
@@ -251,8 +269,16 @@ impl Neg for SecretKey {
 mod tests {
     use secp256k1::rand::thread_rng;
     use {Error, PublicKey, SecretKey};
-    use hex;
     use secp256k1::Scalar;
+
+    #[test]
+    fn test_from_hex() {
+        let k = SecretKey::from_hex("ebb2c082fd7727890a28ac82f6bdf97bad8de9f5d7c9028692de1a255cad3e0f").unwrap();
+        assert_eq!(k.serialize(),  [0xebu8, 0xb2u8, 0xc0u8, 0x82u8, 0xfdu8, 0x77u8, 0x27u8, 0x89u8,
+                                    0x0au8, 0x28u8, 0xacu8, 0x82u8, 0xf6u8, 0xbdu8, 0xf9u8, 0x7bu8,
+                                    0xadu8, 0x8du8, 0xe9u8, 0xf5u8, 0xd7u8, 0xc9u8, 0x02u8, 0x86u8,
+                                    0x92u8, 0xdeu8, 0x1au8, 0x25u8, 0x5cu8, 0xadu8, 0x3eu8, 0x0fu8] );
+    }
 
     #[test]
     fn create_secret() {
@@ -322,35 +348,35 @@ mod tests {
 
     #[test]
     fn valid_keys() {
-        let key = from_hex("0241cc121c419921942add6db6482fb36243faf83317c866d2a28d8c6d7089f7ba");
+        let key = PublicKey::from_hex("0241cc121c419921942add6db6482fb36243faf83317c866d2a28d8c6d7089f7ba");
         assert!(key.is_ok());
-        let key = from_hex("02e6642fd69bd211f93f7f1f36ca51a26a5290eb2dd1b0d8279a87bb0d480c8443");
+        let key = PublicKey::from_hex("02e6642fd69bd211f93f7f1f36ca51a26a5290eb2dd1b0d8279a87bb0d480c8443");
         assert!(key.is_ok());
-        let key = from_hex("0384526253c27c7aef56c7b71a5cd25bebb66dddda437826defc5b2568bde81f07");
+        let key = PublicKey::from_hex("0384526253c27c7aef56c7b71a5cd25bebb66dddda437826defc5b2568bde81f07");
         assert!(key.is_ok());
-        let key = from_hex("");
+        let key = PublicKey::from_hex("");
         assert_eq!(key.err().unwrap(), Error::InvalidPublicKey);
-        let key = from_hex("0abcdefgh");
+        let key = PublicKey::from_hex("0abcdefgh");
         assert_eq!(key.err().unwrap(), Error::InvalidHex);
-        let key = from_hex("9384526253c27c7aef56c7b71a5cd25bebb66dddda437826defc5b2568bde81f07");
+        let key = PublicKey::from_hex("9384526253c27c7aef56c7b71a5cd25bebb66dddda437826defc5b2568bde81f07");
         assert_eq!(key.err().unwrap(), Error::InvalidPublicKey);
-        let key = from_hex("04fe53c78e36b86aae8082484a4007b706d5678cabb92d178fc95020d4d8dc41ef44cfbb8dfa7a593c7910a5b6f94d079061a7766cbeed73e24ee4f654f1e51904");
+        let key = PublicKey::from_hex("04fe53c78e36b86aae8082484a4007b706d5678cabb92d178fc95020d4d8dc41ef44cfbb8dfa7a593c7910a5b6f94d079061a7766cbeed73e24ee4f654f1e51904");
         assert!(key.is_ok());
     }
 
     #[test]
     fn serlialize_deserialize() {
-        let key = from_hex("0384526253c27c7aef56c7b71a5cd25bebb66dddda437826defc5b2568bde81f07").unwrap();
+        let key = PublicKey::from_hex("0384526253c27c7aef56c7b71a5cd25bebb66dddda437826defc5b2568bde81f07").unwrap();
         let des = key.serialize();
         let key2 = PublicKey::parse(&des).unwrap();
         assert_eq!(key, key2);
 
-        let key = from_hex("0241cc121c419921942add6db6482fb36243faf83317c866d2a28d8c6d7089f7ba").unwrap();
+        let key = PublicKey::from_hex("0241cc121c419921942add6db6482fb36243faf83317c866d2a28d8c6d7089f7ba").unwrap();
         let des = key.serialize_compressed();
         let key2 = PublicKey::parse_compressed(&des).unwrap();
         assert_eq!(key, key2);
 
-        let key = from_hex("04fe53c78e36b86aae8082484a4007b706d5678cabb92d178fc95020d4d8dc41ef44cfbb8dfa7a593c7910a5b6f94d079061a7766cbeed73e24ee4f654f1e51904").unwrap();
+        let key = PublicKey::from_hex("04fe53c78e36b86aae8082484a4007b706d5678cabb92d178fc95020d4d8dc41ef44cfbb8dfa7a593c7910a5b6f94d079061a7766cbeed73e24ee4f654f1e51904").unwrap();
         let des = key.serialize();
         let key2 = PublicKey::parse(&des).unwrap();
         assert_eq!(key, key2);
@@ -359,11 +385,11 @@ mod tests {
     #[test]
     fn add_public_keys() {
         let p1 =
-            from_hex("0241cc121c419921942add6db6482fb36243faf83317c866d2a28d8c6d7089f7ba").unwrap();
+            PublicKey::from_hex("0241cc121c419921942add6db6482fb36243faf83317c866d2a28d8c6d7089f7ba").unwrap();
         let p2 =
-            from_hex("02e6642fd69bd211f93f7f1f36ca51a26a5290eb2dd1b0d8279a87bb0d480c8443").unwrap();
+            PublicKey::from_hex("02e6642fd69bd211f93f7f1f36ca51a26a5290eb2dd1b0d8279a87bb0d480c8443").unwrap();
         let exp_sum =
-            from_hex("0384526253c27c7aef56c7b71a5cd25bebb66dddda437826defc5b2568bde81f07").unwrap();
+            PublicKey::from_hex("0384526253c27c7aef56c7b71a5cd25bebb66dddda437826defc5b2568bde81f07").unwrap();
         let sum = p1 + p2;
         assert_eq!(p2 + p1, sum);
         assert_eq!(sum, exp_sum);
@@ -371,17 +397,8 @@ mod tests {
 
     #[test]
     fn scalar_multiplication_is_addition() {
-        let p1 = from_hex("04fe53c78e36b86aae8082484a4007b706d5678cabb92d178fc95020d4d8dc41ef44cfbb8dfa7a593c7910a5b6f94d079061a7766cbeed73e24ee4f654f1e51904").unwrap();
+        let p1 = PublicKey::from_hex("04fe53c78e36b86aae8082484a4007b706d5678cabb92d178fc95020d4d8dc41ef44cfbb8dfa7a593c7910a5b6f94d079061a7766cbeed73e24ee4f654f1e51904").unwrap();
         let k = small(3);
         assert_eq!(p1 + p1 + p1, k * p1);
-    }
-
-    pub fn from_hex(h: &str) -> Result<PublicKey, Error> {
-        let data = hex::decode(h).or(Err(Error::InvalidHex))?;
-        match data.len() {
-            33 => PublicKey::parse_compressed(array_ref!(data, 0, 33)),
-            65 => PublicKey::parse(array_ref!(data, 0, 65)),
-            _ => Err(Error::InvalidPublicKey),
-        }
     }
 }

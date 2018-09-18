@@ -2,6 +2,7 @@
 extern crate arrayref;
 extern crate sha2;
 extern crate rand;
+extern crate hex;
 
 pub use rand::thread_rng;
 
@@ -10,8 +11,6 @@ pub mod secp256k1;
 
 #[cfg(test)]
 extern crate secp256k1_test;
-#[cfg(test)]
-extern crate hex;
 
 pub mod ecmult;
 pub mod schnorr;

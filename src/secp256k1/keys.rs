@@ -7,6 +7,8 @@ use super::rand::Rng;
 use secp256k1::group::{Jacobian, Affine};
 use secp256k1::field::Field;
 use hex;
+use std::fmt::Display;
+use std::fmt;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Public key on a secp256k1 curve.
@@ -26,6 +28,10 @@ impl PublicKey {
         PublicKey(p)
     }
 
+    /// Generate a public key from hex
+    /// The expected format is a tag (0x04, 0x06 or 0x07) for uncompressed keys,
+    /// 0x02, 0x03 for compressed keys
+    /// followed by 32 or 64 bytes, depending on whether the key is compressed or not
     pub fn from_hex(h: &str) -> Result<PublicKey, Error> {
         let data = hex::decode(h).or(Err(Error::InvalidHex))?;
         match data.len() {
@@ -34,6 +40,16 @@ impl PublicKey {
             _ => Err(Error::InvalidPublicKey),
         }
     }
+
+    /// Return the hexadecimal representation of the public key
+    pub fn to_hex(&self, compressed: bool) -> String {
+        if compressed {
+            return hex::encode(self.serialize_compressed().to_vec());
+        }
+        hex::encode(self.serialize().to_vec())
+    }
+
+
 
     /// Create a public key from a compressed public key. Remember that Public keys are just points on the elliptic
     /// curve, so you can derive the full point by supplying the x-coordinate and the parity. By convention, compressed
@@ -136,6 +152,13 @@ impl PublicKey {
     }
 }
 
+impl Display for PublicKey {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(f, "{}", self.to_hex(true));
+        Ok(())
+    }
+}
+
 impl Into<Affine> for PublicKey {
     fn into(self) -> Affine {
         self.0
@@ -183,6 +206,11 @@ impl SecretKey {
         }
     }
 
+    /// Return the hexadecimal representation of the secret key
+    pub fn to_hex(&self) -> String {
+        hex::encode(self.serialize().to_vec())
+    }
+
     /// Create a new random secret key
     /// # Examples
     /// ```
@@ -212,6 +240,12 @@ impl SecretKey {
 
     pub fn inv(&self) -> SecretKey {
         SecretKey(self.0.inv())
+    }
+}
+
+impl Display for SecretKey {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        f.write_str(&self.to_hex())
     }
 }
 
@@ -281,6 +315,12 @@ mod tests {
     }
 
     #[test]
+    fn secret_to_hex() {
+        let k = SecretKey::from_hex("ebb2c082fd7727890a28ac82f6bdf97bad8de9f5d7c9028692de1a255cad3e0f").unwrap();
+        assert_eq!(&k.to_hex(), "ebb2c082fd7727890a28ac82f6bdf97bad8de9f5d7c9028692de1a255cad3e0f");
+    }
+
+    #[test]
     fn create_secret() {
         let _ = SecretKey::random(&mut thread_rng());
     }
@@ -344,6 +384,14 @@ mod tests {
             0u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, val,
         ]).unwrap()
+    }
+
+    #[test]
+    fn formatting() {
+        let key = PublicKey::from_hex("0241cc121c419921942add6db6482fb36243faf83317c866d2a28d8c6d7089f7ba").unwrap();
+        assert_eq!(&key.to_hex(true), "0241cc121c419921942add6db6482fb36243faf83317c866d2a28d8c6d7089f7ba");
+        let key = PublicKey::from_hex("04fe53c78e36b86aae8082484a4007b706d5678cabb92d178fc95020d4d8dc41ef44cfbb8dfa7a593c7910a5b6f94d079061a7766cbeed73e24ee4f654f1e51904").unwrap();
+        assert_eq!(&key.to_hex(false), "04fe53c78e36b86aae8082484a4007b706d5678cabb92d178fc95020d4d8dc41ef44cfbb8dfa7a593c7910a5b6f94d079061a7766cbeed73e24ee4f654f1e51904");
     }
 
     #[test]

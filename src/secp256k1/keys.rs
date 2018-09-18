@@ -169,7 +169,7 @@ impl SecretKey {
     /// # Examples
     /// ```
     /// extern crate rand;
-    /// extern crate secp256k1;
+    /// extern crate libsecp256k1_rs as secp256k1;
     /// use rand::thread_rng;
     /// use secp256k1::SecretKey;
     ///

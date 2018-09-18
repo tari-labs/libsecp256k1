@@ -1,6 +1,6 @@
 //! "Raw" signature tests. The tests in this module illustrate features of digital signatures using raw ECC.
 extern crate rand;
-extern crate secp256k1;
+extern crate libsecp256k1_rs as secp256k1;
 
 use secp256k1::{ Message, PublicKey, SecretKey };
 use secp256k1::schnorr::{ Schnorr, Challenge };

@@ -2,7 +2,7 @@
 name = "libsecp256k1-rs"
 description = "secp256k1 implementation and utilities"
 license = "BSD-3-Clause"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Wei Tang <hi@that.world>", "CjS77 <>"]
 repository = "https://github.com/tari-labs/libsecp256k1-rs/"
 keywords = [ "crypto", "ECDSA", "secp256k1" ]

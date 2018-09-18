@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate arrayref;
 extern crate sha2;
+extern crate rand;
+
+pub use rand::thread_rng;
 
 #[macro_use]
 pub mod secp256k1;

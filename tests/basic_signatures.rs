@@ -1,8 +1,7 @@
 //! "Raw" signature tests. The tests in this module illustrate features of digital signatures using raw ECC.
-extern crate rand;
 extern crate libsecp256k1_rs as secp256k1;
 
-use secp256k1::{ Message, PublicKey, SecretKey };
+use secp256k1::{ Message, PublicKey, SecretKey, thread_rng };
 use secp256k1::schnorr::{ Schnorr, Challenge };
 
 /// In a standard signature, we want to provide some information that proves that I know the private key for a
@@ -19,7 +18,7 @@ use secp256k1::schnorr::{ Schnorr, Challenge };
 #[test]
 #[allow(non_snake_case)]
 fn standard_signature() {
-    let mut rng = rand::thread_rng();
+    let mut rng = thread_rng();
     let k = SecretKey::random(&mut rng);
     let P = PublicKey::from_secret_key(&k);
     let nonce = SecretKey::random(&mut rng);
@@ -48,7 +47,7 @@ fn standard_signature() {
 #[test]
 #[allow(non_snake_case)]
 fn no_nonce() {
-    let mut rng = rand::thread_rng();
+    let mut rng = thread_rng();
     let k = SecretKey::random(&mut rng);
     let P = PublicKey::from_secret_key(&k);
     let m = Message::hash(b"password").unwrap();
@@ -114,7 +113,7 @@ fn cancellation_attack() {
 #[test]
 #[allow(non_snake_case)]
 fn two_two_multisig() {
-    let mut rng = rand::thread_rng();
+    let mut rng = thread_rng();
     let m = Message::hash(b"password").unwrap();
     // Bob chooses b (secret key), rb (nonce), t (adapter)
     let rb = SecretKey::random(&mut rng);
@@ -157,7 +156,7 @@ fn two_two_multisig() {
 
 #[allow(non_snake_case)]
 fn get_keyset() -> (SecretKey, PublicKey, SecretKey, PublicKey) {
-    let mut rng = rand::thread_rng();
+    let mut rng = thread_rng();
     let k = SecretKey::random(&mut rng);
     let P = PublicKey::from_secret_key(&k);
     let r = SecretKey::random(&mut rng);
